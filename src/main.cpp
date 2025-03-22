@@ -1,9 +1,15 @@
-#include <WiFi.h>
+#include <WiFi.h>  // Für ESP32, verwende <ESP8266WiFi.h> für ESP8266
+#include <WebServer.h>
 #include <Arduino.h>
-//#include "cridentials.h" // wifi ssid and password
+#include "cridentials.h"
 
-const char* ssid = "**************";
-const char* password = "**************";
+
+
+WebServer server(80);
+
+void handleRoot() {
+  server.send(200, "text/html", "<h1>Hallo von deinem ESP Webserver!</h1>");
+}
 
 void setup() {
   Serial.begin(115200);
@@ -23,11 +29,15 @@ void setup() {
     Serial.println("\nVerbunden mit dem WLAN");
     Serial.print("IP-Adresse: ");
     Serial.println(WiFi.localIP());
+
+    server.on("/", handleRoot);
+    server.begin();
+    Serial.println("Webserver gestartet");
   } else {
     Serial.println("\nWLAN-Verbindung fehlgeschlagen");
   }
 }
 
 void loop() {
-  // Hier könnte weitere Logik stehen, z. B. eine Wiederverbindung bei Verbindungsverlust
+  server.handleClient();
 }
