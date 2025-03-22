@@ -1,9 +1,10 @@
 #include <WiFi.h>  // Für ESP32, verwende <ESP8266WiFi.h> für ESP8266
 #include <WebServer.h>
 #include <Arduino.h>
-#include "credentials.h"
+//#include "credentials.h"
 
-
+const char* ssid = "DEIN_SSID";
+const char* password = "DEIN_PASSWORT";
 
 WebServer server(80);
 
