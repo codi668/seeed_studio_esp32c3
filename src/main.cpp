@@ -1,7 +1,7 @@
 #include <WiFi.h>  // Für ESP32, verwende <ESP8266WiFi.h> für ESP8266
 #include <WebServer.h>
 #include <Arduino.h>
-#include "cridentials.h"
+#include "credentials.h"
 
 
 
