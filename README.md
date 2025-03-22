@@ -1,4 +1,4 @@
-# Grubär - ESP32 Webserver Projekt
+# ESP32 Webserver
 
 ## Beschreibung
 Dieses Projekt zeigt, wie man mit einem ESP32-Mikrocontroller einen einfachen Webserver hostet, über den eine LED ein- und ausgeschaltet werden kann. Der Webserver verwendet das LittleFS-Dateisystem, um HTML-Dateien und Bilder zu verwalten. Dieses Projekt ist ideal für Einsteiger, die lernen möchten, wie man einen Webserver auf einem ESP32 einrichtet und steuert.
@@ -21,7 +21,10 @@ Dieses Projekt zeigt, wie man mit einem ESP32-Mikrocontroller einen einfachen We
    - Installiere PlatformIO, falls noch nicht geschehen. Es kann als Plugin für Visual Studio Code oder als eigenständige IDE verwendet werden.
 
 2. **Projekt klonen**:
-   - Klone dieses Repository oder lade den Code herunter.
+   - Klone dieses Repository oder lade den Code herunter:
+     ```bash
+     git clone -b advanced_webserver https://github.com/codi668/seeed_studio_esp32c3.git
+     ```
 
 3. **WiFi-Zugangsdaten anpassen**:
    - Öffne die Datei `src/main.cpp` und trage deine WiFi-Zugangsdaten ein:
@@ -34,11 +37,17 @@ Dieses Projekt zeigt, wie man mit einem ESP32-Mikrocontroller einen einfachen We
    - Erstelle ein Dateisystem-Image, das die HTML-Dateien und Bilder enthält.
    - Verwende das `LittleFS Upload Tool`, um das Dateisystem-Image auf den ESP32 hochzuladen.
    - Stelle sicher, dass der ESP32 mit dem Computer verbunden ist.
-   - Gehe zu `PlatformIO > Project Tasks > Platform > Upload Filesystem Image`, um die Dateien im `data`-Ordner auf das LittleFS-Dateisystem des ESP32 hochzuladen.
+   - Führe den folgenden Befehl aus, um das Dateisystem-Image hochzuladen:
+     ```bash
+     pio run --target uploadfs
+     ```
 
 5. **Code hochladen**:
    - Verbinde deinen ESP32 mit dem Computer und wähle das richtige Board und den Port in PlatformIO aus.
-   - Lade den Code auf den ESP32 hoch.
+   - Lade den Code auf den ESP32 hoch:
+     ```bash
+     pio run --target upload
+     ```
 
 ## Verwendung
 1. **Webseite aufrufen**:
@@ -67,4 +76,4 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen findes
 
 ---
 
-Viel Spaß mit deinem ESP32 Webserver-Projekt! �
+Viel Spaß mit deinem ESP32 Webserver-Projekt! 🚀
