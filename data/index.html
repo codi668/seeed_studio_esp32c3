@@ -37,9 +37,17 @@
             box-shadow: 0 5px #666;
             transform: translateY(4px);
         }
+        .logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
+<img src="/logo" class="logo">
 <div class="container">
     <h1>LED Control</h1>
     <button class="button" onclick="fetch('/led/on')">Turn On</button>
