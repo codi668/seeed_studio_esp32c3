@@ -94,6 +94,8 @@ void setup() {
         Serial.print(".");
     }
     Serial.println("\nConnected to WiFi");
+    Serial.println("\nIP address: ");
+    Serial.println(WiFi.localIP());
 
     server.on("/", handleRoot);
     server.on("/led/on", handleLEDOn);
