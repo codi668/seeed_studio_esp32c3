@@ -1,5 +1,8 @@
 # ESP32 Webserver
 
+![Last Commit](https://img.shields.io/github/last-commit/codi668/seeed_studio_esp32c3)
+![Most Used Language](https://img.shields.io/github/languages/top/codi668/seeed_studio_esp32c3)
+
 ## Beschreibung
 Dieses Projekt zeigt, wie man mit einem ESP32-Mikrocontroller einen einfachen Webserver hostet, über den eine LED ein- und ausgeschaltet werden kann. Der Webserver verwendet das LittleFS-Dateisystem, um HTML-Dateien und Bilder zu verwalten. Dieses Projekt ist ideal für Einsteiger, die lernen möchten, wie man einen Webserver auf einem ESP32 einrichtet und steuert.
 
