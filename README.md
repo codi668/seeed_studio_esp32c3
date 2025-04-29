@@ -1,4 +1,4 @@
-# ESP32 Webserver
+# ESP32 Secure Web Server & HTTPS Client
 
 ![Last Commit](https://img.shields.io/github/last-commit/codi668/seeed_studio_esp32c3)
 ![Most Used Language](https://img.shields.io/github/languages/top/codi668/seeed_studio_esp32c3)
@@ -8,81 +8,204 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/codi668/seeed_studio_esp32c3)
 
 
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Beschreibung
-Dieses Projekt zeigt, wie man mit einem ESP32-Mikrocontroller einen einfachen Webserver hostet, über den eine LED ein- und ausgeschaltet werden kann. Der Webserver verwendet das LittleFS-Dateisystem, um HTML-Dateien und Bilder zu verwalten. Dieses Projekt ist ideal für Einsteiger, die lernen möchten, wie man einen Webserver auf einem ESP32 einrichtet und steuert.
+## 📋 Überblick
 
-## Funktionen
-- **Webserver**: Hostet eine Webseite, auf der eine LED gesteuert werden kann.
-- **LED-Steuerung**: Die LED kann über die Webseite ein- und ausgeschaltet werden.
-- **LittleFS**: Verwendet das LittleFS-Dateisystem, um HTML-Dateien und Bilder zu speichern und zu verwalten.
+Dieser Code stellt einen ESP32 als HTTPS-Client ein, um mit einem sicheren Server zu kommunizieren. Der ESP32 wird mit einem WLAN-Netzwerk verbunden, stellt eine sichere HTTPS-Verbindung zu einem externen Server her und sendet eine GET-Anfrage. Anschließend wird die Antwort des Servers im seriellen Monitor ausgegeben.
 
-## Hardware
-- **ESP32**: Der Mikrocontroller, der den Webserver hostet.
-- **LED**: Eine LED, die über den Webserver gesteuert wird.
+## 1. Einbinden von Bibliotheken
 
-## Software
-- **PlatformIO**: Eine professionelle Entwicklungsumgebung für Embedded Systems, die in diesem Projekt verwendet wird.
-- **LittleFS**: Ein Dateisystem, das auf dem ESP32 verwendet wird, um Dateien zu speichern und zu verwalten.
+```cpp
+#include <WiFi.h>
+#include <WebServer.h> // Muss manuell installiert werden, falls nicht enthalten
+#include <WiFiClientSecure.h>
+#include "credentials.h" // Enthält WLAN-Zugangsdaten
+```
 
-## Installation
-1. **PlatformIO einrichten**:
-   - Installiere PlatformIO, falls noch nicht geschehen. Es kann als Plugin für Visual Studio Code oder als eigenständige IDE verwendet werden.
+- **WiFi.h**: Ermöglicht die WLAN-Verbindung.
+- **WebServer.h**: Wird für Webserver-Funktionalität verwendet (in diesem Code aber nicht aktiv).
+- **WiFiClientSecure.h**: Wird genutzt, um eine sichere HTTPS-Verbindung aufzubauen.
+- **credentials.h**: Enthält WLAN-Zugangsdaten (SSID und Passwort).
 
-2. **Projekt klonen**:
-   - Klone dieses Repository oder lade den Code herunter:
-     ```bash
-     git clone -b advanced_webserver https://github.com/codi668/seeed_studio_esp32c3.git
-     ```
+## 2. WLAN-Verbindung herstellen
 
-3. **WiFi-Zugangsdaten anpassen**:
-   - Öffne die Datei `src/main.cpp` und trage deine WiFi-Zugangsdaten ein:
-     ```cpp
-     const char* ssid = "DEIN_WIFI_SSID";
-     const char* password = "DEIN_WIFI_PASSWORT";
-     ```
+```cpp
+Serial.println("Verbinde mit WLAN...");
+WiFi.begin(ssid, password);
+while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+}
+Serial.println("
+Verbunden!");
+```
 
-4. **Dateisystem-Image erstellen und hochladen**:
-   - Erstelle ein Dateisystem-Image, das die HTML-Dateien und Bilder enthält.
-   - Verwende das `LittleFS Upload Tool`, um das Dateisystem-Image auf den ESP32 hochzuladen.
-   - Stelle sicher, dass der ESP32 mit dem Computer verbunden ist.
-   - Führe den folgenden Befehl aus, um das Dateisystem-Image hochzuladen:
-     ```bash
-     pio run --target uploadfs
-     ```
+- Der Code verbindet den ESP32 mit einem WLAN-Netzwerk mit den in `credentials.h` hinterlegten Zugangsdaten.
+- Wenn die Verbindung erfolgreich ist, wird dies im seriellen Monitor angezeigt.
 
-5. **Code hochladen**:
-   - Verbinde deinen ESP32 mit dem Computer und wähle das richtige Board und den Port in PlatformIO aus.
-   - Lade den Code auf den ESP32 hoch:
-     ```bash
-     pio run --target upload
-     ```
+## 3. Sichere Verbindung zu einem Server aufbauen
 
-## Verwendung
-1. **Webseite aufrufen**:
-   - Nachdem der ESP32 erfolgreich mit dem WiFi verbunden ist, öffne einen Browser und gib die IP-Adresse des ESP32 ein, die im Serial Monitor angezeigt wird.
-   - Die Webseite sollte angezeigt werden, auf der du die LED ein- und ausschalten kannst.
+```cpp
+WiFiClientSecure client;
+client.setInsecure(); // ⚠️ Unsicher, aber nützlich für Tests
+```
 
-2. **LED steuern**:
-   - Klicke auf die Schaltflächen auf der Webseite, um die LED ein- oder auszuschalten.
+- **WiFiClientSecure** erstellt einen sicheren Client.
+- `client.setInsecure()` deaktiviert die Zertifikatsprüfung (unsicher, aber nützlich für Tests).
 
-## Dateistruktur
-- **/data/index.html**: Die HTML-Datei für die Webseite.
-- **/data/grubar_trans.webp**: Das Bild, das auf der Webseite angezeigt wird.
-- **/src/main.cpp**: Der Hauptcode für den ESP32.
+## 4. Verbindung zum Zielserver herstellen
 
-## Lizenz
-Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Informationen findest du in der [LICENSE](LICENSE)-Datei.
+```cpp
+Serial.print("Verbinde mit https://");
+Serial.println(host);
 
-## Autor
-- **Thomas Gruber**
+if (!client.connect(host, httpsPort)) {
+    Serial.println("Verbindung fehlgeschlagen!");
+    return;
+}
+```
 
-## Version
-- **1.0.0**
+- Der ESP32 verbindet sich mit dem Server (z.B. `howsmyssl.com`).
+- Wenn die Verbindung fehlschlägt, wird eine Fehlermeldung angezeigt.
 
-## Erstellt am
-- **22.03.2025**
+## 5. HTTP GET-Anfrage senden
 
----
+```cpp
+client.print(String("GET ") + url + " HTTP/1.1
+" +
+             "Host: " + host + "
+" +
+             "User-Agent: ESP32
+" +
+             "Connection: close
 
-Viel Spaß mit deinem ESP32 Webserver-Projekt! 🚀
+");
+```
+
+- Der ESP32 sendet eine HTTP GET-Anfrage an die URL `/a/check` auf dem Server.
+- `User-Agent: ESP32` wird hinzugefügt, um den Server zu informieren, dass die Anfrage von einem ESP32 stammt.
+
+## 6. Antwort des Servers lesen
+
+```cpp
+while (client.connected()) {
+    String line = client.readStringUntil('
+');
+    if (line == "
+") break; // Header zu Ende
+}
+
+String payload = client.readString();
+Serial.println("Antwort:");
+Serial.println(payload);
+```
+
+- Der ESP32 liest die Antwort des Servers.
+- Zuerst werden die Header übersprungen, dann wird der Payload (Inhalt der Antwort) in `payload` gespeichert und im seriellen Monitor angezeigt.
+
+
+
+- In dieser Funktion passiert nichts, da der Code nur einmal ausgeführt wird. Der ESP32 bleibt nach der Verbindung zum Server in der `setup()`-Funktion und wartet auf eine Antwort.
+
+## **Zusammenfassung**
+
+- Der ESP32 verbindet sich mit einem WLAN und stellt eine HTTPS-Verbindung zu einem Server her.
+- Eine GET-Anfrage wird gesendet und die Antwort wird im seriellen Monitor ausgegeben.
+- Die `WiFiClientSecure`-Bibliothek wird verwendet, um die HTTPS-Verbindung sicher zu gestalten.
+
+## **Verbesserungspotential**
+
+- **Zertifikatsprüfung**: Statt `setInsecure()` sollte ein valides Root-Zertifikat verwendet werden.
+- **Datenverarbeitung**: Die Serverantwort könnte weiterverarbeitet werden (z.B. JSON extrahieren).
+- **Fehlerbehandlung**: Der Code könnte robuster gemacht werden, um Verbindungsprobleme besser zu handhaben.
+
+
+## 📋 Komplette Installationsanleitung
+
+### Voraussetzungen
+1. **Hardware**:
+    - ESP32 Board (z.B. ESP32 DevKitC)
+    - Micro-USB Kabel
+    - LED mit 220Ω Widerstand (optional)
+
+2. **Software**:
+    - [Visual Studio Code](https://code.visualstudio.com/)
+    - [PlatformIO Extension](https://platformio.org/install/ide?install=vscode)
+
+### 🛠 Schritt-für-Schritt Installation
+
+1. **Projekt klonen**:
+   ```bash
+   git clone https://github.com/codi668/seeed_studio_esp32c3.git
+   cd seeed_studio_esp32c3
+   ```
+
+2. **WLAN konfigurieren**:
+   Erstelle eine neue Datei `include/credentials.h` mit:
+   ```cpp
+   const char* ssid = "DEIN_WLAN_NAME";
+   const char* password = "DEIN_WLAN_PASSWORT";
+   ```
+
+3. **PlatformIO einrichten**:
+    - Öffne das Projekt in VS Code.
+    - Wähle das richtige Board in `platformio.ini`:
+   ```ini
+   [env:esp32dev]
+   platform = espressif32
+   board = esp32dev
+   ```
+
+4. **Dateisystem uploaden**:
+   Platziere Webdateien im `data` Ordner.
+
+   Führe aus:
+   ```bash
+   pio run --target uploadfs
+   ```
+
+5. **Firmware flashen**:
+   Flashen Sie die Firmware auf das ESP32-Board:
+   ```bash
+   pio run --target upload
+   ```
+
+6. **Seriellen Monitor starten**:
+   Um die Ausgabe zu überwachen und sicherzustellen, dass das Gerät mit dem WLAN verbunden ist, starten Sie den seriellen Monitor:
+   ```bash
+   pio device monitor
+   ```
+
+### 🔧 Troubleshooting
+
+| Problem | Lösung |
+| ------- | ------ |
+| Upload fehlgeschlagen | Boot-Taste beim Upload gedrückt halten |
+| WLAN verbindet nicht | `credentials.h` überprüfen |
+| Certificate verify failed | Root-Zertifikat in Code aktivieren |
+
+### 📂 Dateistruktur
+```
+├── data/                # Webdateien
+│   ├── index.html
+│   └── style.css
+├── include/
+│   └── credentials.h    # WLAN Einstellungen
+├── lib/
+├── src/
+│   └── main.cpp         # Hauptprogramm
+└── platformio.ini       # Build-Konfiguration
+```
+
+### 🌟 Erste Schritte
+- Seriellen Monitor öffnen
+- Warten auf WLAN-Verbindung
+- IP-Adresse im Monitor notieren
+- Im Browser öffnen: `http://<ESP_IP>`
+
+### 📜 Lizenz
+MIT License - Details in der LICENSE Datei
+
+
