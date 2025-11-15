@@ -1,57 +1,161 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="de">
 <head>
-    <title>LED Control</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Turntable & LEDs</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            color: #333;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .button {
-            display: inline-block;
-            padding: 15px 25px;
-            font-size: 24px;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            outline: none;
-            color: #fff;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 9px #999;
-            margin: 10px;
-        }
-        .button:hover {background-color: #3e8e41}
-        .button:active {
-            background-color: #3e8e41;
-            box-shadow: 0 5px #666;
-            transform: translateY(4px);
-        }
-        .logo {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 20%;
-            height: auto;
-        }
+        :root{--bg:#0f1222;--card:#171b34;--accent:#7c9cff;--text:#e8ebff;--muted:#a5acc7}
+        *{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#2a2f5e00 20%,#2a2f5e88 80%),var(--bg);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto}
+        .container{max-width:980px;margin:28px auto;padding:0 18px}
+        .header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+        .badge{background:#263168;color:#cfe2ff;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid #33407a}
+        .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+        .card{background:linear-gradient(160deg,#15193a,#0e1030);border:1px solid #24284d;border-radius:16px;padding:16px;box-shadow:0 10px 30px #0004}
+        .card h2{margin:2px 0 10px;font-size:18px}
+        .row{display:grid;gap:10px;margin:10px 0}
+        label{font-size:13px;color:var(--muted)}
+        input[type="range"]{width:100%}
+        select, input[type="text"], input[type="password"]{width:100%;padding:10px;border-radius:10px;border:1px solid #303869;background:#101434;color:var(--text)}
+        button{padding:10px 14px;border-radius:12px;border:1px solid #3a4696;background:linear-gradient(180deg,#3d49a8,#2f3a8f);color:#fff;cursor:pointer}
+        button.ghost{background:transparent;border-color:#445199}
+        .kv{display:flex;justify-content:space-between;color:#c7cdf0;font-size:13px;margin-top:6px}
+        .footer{opacity:.7;font-size:12px;margin-top:18px}
+        .color-wrap{display:flex;align-items:center;gap:10px}
+        .color-wrap input[type="color"]{appearance:none;border:none;width:44px;height:34px;border-radius:8px;overflow:hidden}
+        .toggle{display:flex;gap:8px}
+        .badge.ip{margin-left:auto}
     </style>
 </head>
 <body>
-<img src="/logo" class="logo">
 <div class="container">
-    <h1>LED Control</h1>
-    <button class="button" onclick="fetch('/led/on')">Turn On</button>
-    <button class="button" onclick="fetch('/led/off')">Turn Off</button>
+    <div class="header">
+        <h1>Turntable & LED Controller</h1>
+        <span id="modeBadge" class="badge">Loading…</span>
+        <span id="ipBadge" class="badge ip">—</span>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Motor</h2>
+            <div class="row">
+                <label>Geschwindigkeit</label>
+                <input id="speed" type="range" min="0" max="1023" step="1">
+                <div class="kv"><span>0</span><span>1023</span></div>
+                <button id="stopBtn" class="ghost">Stopp</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>LEDs</h2>
+            <div class="row">
+                <label>Farbe & Helligkeit</label>
+                <div class="color-wrap">
+                    <input id="color" type="color">
+                    <input id="bright" type="range" min="1" max="255" step="1">
+                </div>
+            </div>
+            <div class="row">
+                <label>Effekt</label>
+                <select id="effect">
+                    <option value="0">Solid</option>
+                    <option value="1">Rainbow</option>
+                    <option value="2">Breath</option>
+                    <option value="3">Chase</option>
+                </select>
+            </div>
+            <button id="applyLed">Anwenden</button>
+        </div>
+
+        <div class="card">
+            <h2>Netzwerk</h2>
+            <div class="row">
+                <label>Modus</label>
+                <div class="toggle">
+                    <select id="wifiMode">
+                        <option value="AP">Access Point</option>
+                        <option value="STA">Station (WLAN)</option>
+                    </select>
+                    <button id="saveWifi">Speichern & Neu verbinden</button>
+                </div>
+            </div>
+            <div class="row" id="wifiCreds">
+                <label>WLAN (nur Station)</label>
+                <input id="ssid" type="text" placeholder="SSID">
+                <input id="pass" type="password" placeholder="Passwort">
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">© Turntable Controller • inspiriert von WLED-Effekten</div>
 </div>
+
+<script>
+    const $ = sel => document.querySelector(sel);
+
+    async function api(path, method="GET", body=null){
+        let opt = {method, headers:{'Content-Type':'application/json'}};
+        if(body) opt.body = JSON.stringify(body);
+        const r = await fetch(path, opt);
+        return r.json();
+    }
+    function hexFromRGB(r,g,b){ return '#' + [r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+    function rgbFrom32(col){ const r=(col>>16)&255, g=(col>>8)&255, b=col&255; return {r,g,b}; }
+    function updateBadges(state){
+        $('#modeBadge').textContent = state.wifiMode === "AP" ? "AP-Mode" : "Station-Mode";
+        $('#ipBadge').textContent = state.ip || "—";
+    }
+
+    async function loadState(){
+        try{
+            const s = await api('/api/state');
+            $('#speed').value = s.speed;
+            $('#bright').value = s.brightness;
+            $('#effect').value = s.effect;
+            const {r,g,b} = rgbFrom32(s.color);
+            $('#color').value = hexFromRGB(r,g,b);
+            $('#wifiMode').value = s.wifiMode;
+            $('#ssid').value = s.ssid || '';
+            $('#pass').value = s.pass || '';
+            updateBadges(s);
+        }catch(e){ console.error(e); }
+    }
+
+    $('#stopBtn').addEventListener('click', async ()=>{
+        await api('/api/state','POST',{speed:0});
+        $('#speed').value = 0;
+    });
+
+    $('#speed').addEventListener('input', async (e)=>{
+        await api('/api/state','POST',{speed: Number(e.target.value)});
+    });
+
+    $('#applyLed').addEventListener('click', async ()=>{
+        const hex = $('#color').value.replace('#','');
+        const color = parseInt(hex,16);
+        const brightness = Number($('#bright').value);
+        const effect = Number($('#effect').value);
+        await api('/api/state','POST',{color, brightness, effect});
+    });
+
+    $('#wifiMode').addEventListener('change', ()=>{
+        const sta = $('#wifiMode').value === 'STA';
+        $('#wifiCreds').style.display = sta ? 'block' : 'none';
+    });
+
+    $('#saveWifi').addEventListener('click', async ()=>{
+        const mode = $('#wifiMode').value;
+        const ssid = $('#ssid').value;
+        const pass = $('#pass').value;
+        const res = await api('/api/wifi','POST',{mode, ssid, pass});
+        alert(res.msg || 'OK');
+        setTimeout(()=>location.reload(), 1200);
+    });
+
+    window.addEventListener('load', ()=>{
+        loadState();
+        $('#wifiMode').dispatchEvent(new Event('change'));
+    });
+</script>
 </body>
 </html>
